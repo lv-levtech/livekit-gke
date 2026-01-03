@@ -26,6 +26,13 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: livekit
+  ignoreDifferences:
+    # Preserve manually set loadBalancerIP for TURN service
+    - group: ""
+      kind: Service
+      name: livekit-livekit-server-turn
+      jsonPointers:
+        - /spec/loadBalancerIP
   syncPolicy:
     automated:
       prune: true
