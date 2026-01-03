@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: turn-tls-secret
   issuerRef:
-    name: letsencrypt-staging
+    name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
     - turn.dev.levtech.org
