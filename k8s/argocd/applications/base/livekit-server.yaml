@@ -33,6 +33,13 @@ spec:
       name: livekit-livekit-server-turn
       jsonPointers:
         - /spec/loadBalancerIP
+    # Preserve GKE Ingress annotations for main service
+    - group: ""
+      kind: Service
+      name: livekit-livekit-server
+      jsonPointers:
+        - /metadata/annotations/cloud.google.com~1backend-config
+        - /metadata/annotations/cloud.google.com~1neg
   syncPolicy:
     automated:
       prune: true
