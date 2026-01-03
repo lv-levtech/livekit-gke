@@ -33,13 +33,14 @@ livekit:
   log_level: debug
 
   # TURN Configuration
-  # Note: TLS disabled until DNS-01 challenge is configured for cert-manager
+  # Disabled until DNS-01 challenge is configured for cert-manager
+  # TODO: Enable after setting up cert-manager DNS-01 solver for Route53
   turn:
-    enabled: true
-    domain: turn.dev.levtech.org
-    # tls_port: 3478  # Disabled - requires TLS cert from cert-manager with DNS-01
-    udp_port: 3478
-    # secretName: turn-tls-secret  # Will enable after DNS-01 is configured
+    enabled: false
+    # domain: turn.dev.levtech.org
+    # udp_port: 3478
+    # tls_port: 5349
+    # secretName: turn-tls-secret
 
   # Redis (set via --set from Terraform output)
   # redis:
