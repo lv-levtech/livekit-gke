@@ -12,4 +12,4 @@ patches:
     patch: |-
       - op: replace
         path: /spec/provider/gcpsm/projectID
-        value: your-gcp-project-dev
+        value: lt-ai-roleplay-dev
