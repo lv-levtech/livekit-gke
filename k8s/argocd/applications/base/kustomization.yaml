@@ -4,5 +4,7 @@ kind: Kustomization
 resources:
   - cert-manager.yaml
   - external-secrets.yaml
+  - cert-manager-resources.yaml
+  - external-secrets-resources.yaml
   - cluster-resources.yaml
   - livekit-server.yaml

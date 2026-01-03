@@ -130,6 +130,8 @@ resource "helm_release" "argocd" {
 ################################################################################
 
 resource "kubernetes_manifest" "infrastructure_project" {
+  count = var.bootstrap_app_of_apps ? 1 : 0
+
   manifest = {
     apiVersion = "argoproj.io/v1alpha1"
     kind       = "AppProject"
@@ -173,6 +175,8 @@ resource "kubernetes_manifest" "infrastructure_project" {
 ################################################################################
 
 resource "kubernetes_manifest" "applications_project" {
+  count = var.bootstrap_app_of_apps ? 1 : 0
+
   manifest = {
     apiVersion = "argoproj.io/v1alpha1"
     kind       = "AppProject"
