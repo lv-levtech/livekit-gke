@@ -1,0 +1,14 @@
+# GCP Configuration
+project_id = "your-gcp-project-id"
+region     = "asia-northeast1"
+
+# Domain Configuration
+domain      = "livekit-dev.example.com"
+turn_domain = "turn-dev.example.com"
+
+# DNS (optional - set if using Cloud DNS)
+# dns_zone_name = "your-dns-zone"
+
+# LiveKit API Keys (use terraform.tfvars or environment variables)
+# livekit_api_key    = "your-api-key"
+# livekit_api_secret = "your-api-secret"

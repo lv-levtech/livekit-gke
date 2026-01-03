@@ -1,0 +1,136 @@
+# =============================================================================
+# Terraform Plan Workflow
+# =============================================================================
+# Runs on pull requests to validate and plan Terraform changes.
+# =============================================================================
+
+name: Terraform Plan
+
+on:
+  pull_request:
+    paths:
+      - 'infra/**'
+      - '.github/workflows/terraform-*.yml'
+
+env:
+  TF_VERSION: '1.5.0'
+  GOOGLE_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Detect Changed Environments
+  # ---------------------------------------------------------------------------
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      environments: ${{ steps.filter.outputs.changes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changed environments
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            dev:
+              - 'infra/environments/dev/**'
+              - 'infra/modules/**'
+            stg:
+              - 'infra/environments/stg/**'
+              - 'infra/modules/**'
+            prd:
+              - 'infra/environments/prd/**'
+              - 'infra/modules/**'
+
+  # ---------------------------------------------------------------------------
+  # Terraform Plan
+  # ---------------------------------------------------------------------------
+  plan:
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJson(needs.detect-changes.outputs.environments) }}
+    
+    permissions:
+      contents: read
+      pull-requests: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Terraform Format Check
+        id: fmt
+        working-directory: infra/environments/${{ matrix.environment }}
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        working-directory: infra/environments/${{ matrix.environment }}
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        working-directory: infra/environments/${{ matrix.environment }}
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: infra/environments/${{ matrix.environment }}
+        run: |
+          terraform plan -no-color -input=false -out=tfplan 2>&1 | tee plan.txt
+        continue-on-error: true
+
+      - name: Post Plan to PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('infra/environments/${{ matrix.environment }}/plan.txt', 'utf8');
+            const truncatedPlan = plan.length > 60000 ? plan.substring(0, 60000) + '\n\n... (truncated)' : plan;
+            
+            const output = `### Terraform Plan: \`${{ matrix.environment }}\`
+
+            #### Format: \`${{ steps.fmt.outcome }}\`
+            #### Initialization: \`${{ steps.init.outcome }}\`
+            #### Validation: \`${{ steps.validate.outcome }}\`
+            #### Plan: \`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`terraform
+            ${truncatedPlan}
+            \`\`\`
+
+            </details>
+
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+      - name: Fail on Plan Error
+        if: steps.plan.outcome == 'failure'
+        run: exit 1

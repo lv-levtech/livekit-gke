@@ -1,0 +1,122 @@
+# =============================================================================
+# LiveKit Helm Chart - Common Values
+# =============================================================================
+# This file contains values shared across all environments.
+# Environment-specific overrides are in dev.yaml, stg.yaml, prd.yaml
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Pod Configuration
+# -----------------------------------------------------------------------------
+terminationGracePeriodSeconds: 18000  # 5 hours for graceful shutdown
+
+# -----------------------------------------------------------------------------
+# LiveKit Server Configuration
+# -----------------------------------------------------------------------------
+livekit:
+  # Logging
+  log_level: info
+
+  # Port Configuration
+  port: 7880
+  rtc:
+    port_range_start: 50000
+    port_range_end: 60000
+    tcp_port: 7881
+    use_external_ip: true
+
+  # TURN Server Configuration
+  turn:
+    enabled: true
+    udp_port: 3478
+    tls_port: 5349
+    # domain and secretName are environment-specific
+
+  # Redis Configuration (populated from Terraform output)
+  # redis:
+  #   address: <from-terraform-output>
+
+# -----------------------------------------------------------------------------
+# Load Balancer Configuration (GKE)
+# -----------------------------------------------------------------------------
+loadBalancer:
+  type: gke-managed-cert
+  # staticIpName and certificateName are environment-specific
+
+# -----------------------------------------------------------------------------
+# GCP-specific Configuration
+# -----------------------------------------------------------------------------
+gcp:
+  backendConfig:
+    enabled: true
+    spec:
+      timeoutSec: 36000  # 10 hours for WebSocket connections
+      connectionDraining:
+        drainingTimeoutSec: 300
+      healthCheck:
+        type: HTTP
+        port: 7880
+        requestPath: /
+
+# -----------------------------------------------------------------------------
+# Pod Anti-Affinity (Required: 1 pod per node)
+# -----------------------------------------------------------------------------
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+                - livekit-server
+        topologyKey: kubernetes.io/hostname
+
+# -----------------------------------------------------------------------------
+# Node Selector (overridden per environment)
+# -----------------------------------------------------------------------------
+# nodeSelector:
+#   cloud.google.com/gke-nodepool: livekit-node-pool
+
+# -----------------------------------------------------------------------------
+# Pod Disruption Budget
+# -----------------------------------------------------------------------------
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# -----------------------------------------------------------------------------
+# Service Account
+# -----------------------------------------------------------------------------
+serviceAccount:
+  create: true
+  name: livekit-server
+  # annotations are environment-specific (Workload Identity)
+
+# -----------------------------------------------------------------------------
+# Monitoring
+# -----------------------------------------------------------------------------
+prometheus:
+  enabled: true
+  port: 6789
+
+# -----------------------------------------------------------------------------
+# Host Networking (Required for WebRTC)
+# -----------------------------------------------------------------------------
+hostNetwork: true
+dnsPolicy: ClusterFirstWithHostNet
+
+# -----------------------------------------------------------------------------
+# Security Context
+# -----------------------------------------------------------------------------
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL

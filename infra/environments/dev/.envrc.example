@@ -1,0 +1,36 @@
+# LiveKit GKE - DEV Environment Variables
+# Copy this file to .envrc and fill in the values
+# Then run: direnv allow
+
+# =============================================================================
+# GCP Authentication
+# =============================================================================
+# Option 1: Use gcloud application-default credentials (recommended for local dev)
+#   gcloud auth application-default login
+#
+# Option 2: Use service account key
+# export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"
+
+# =============================================================================
+# AWS Authentication (for Route 53)
+# =============================================================================
+# Option 1: Use AWS CLI credentials file (~/.aws/credentials)
+#   aws configure
+#
+# Option 2: Environment variables
+export AWS_ACCESS_KEY_ID="your-aws-access-key-id"
+export AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
+export AWS_REGION="ap-northeast-1"
+
+# =============================================================================
+# LiveKit API Credentials (Terraform Variables)
+# =============================================================================
+# These are passed to Terraform as TF_VAR_* environment variables
+export TF_VAR_livekit_api_key="your-livekit-api-key"
+export TF_VAR_livekit_api_secret="your-livekit-api-secret"
+
+# =============================================================================
+# Route 53 Configuration (Terraform Variables)
+# =============================================================================
+# Get your hosted zone ID from AWS Route 53 console
+export TF_VAR_route53_zone_id="YOUR_ROUTE53_HOSTED_ZONE_ID"

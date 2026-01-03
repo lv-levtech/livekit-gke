@@ -1,0 +1,78 @@
+# =============================================================================
+# LiveKit Helm Chart - Production Environment Values
+# =============================================================================
+# Inherits from common.yaml
+# Usage: helm install livekit livekit/livekit-server -f common.yaml -f prd.yaml
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Replica Configuration
+# -----------------------------------------------------------------------------
+replicaCount: 3
+
+# -----------------------------------------------------------------------------
+# Resource Limits (c2-standard-8: 8 vCPU, 32GB RAM)
+# -----------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: "4000m"
+    memory: "2048Mi"
+  limits:
+    cpu: "7500m"
+    memory: "4096Mi"
+
+# -----------------------------------------------------------------------------
+# LiveKit Configuration
+# -----------------------------------------------------------------------------
+livekit:
+  log_level: info
+
+  # TURN Configuration
+  turn:
+    enabled: true
+    domain: turn.example.com  # TODO: Update with actual domain
+    secretName: livekit-turn-tls-prd
+
+  # Redis (from Terraform output)
+  redis:
+    address: ""  # TODO: Set from terraform output: redis_address
+
+# -----------------------------------------------------------------------------
+# Load Balancer Configuration
+# -----------------------------------------------------------------------------
+loadBalancer:
+  type: gke-managed-cert
+  staticIpName: livekit-ip-prd
+  certificateName: livekit-cert-prd
+
+# -----------------------------------------------------------------------------
+# Service Account with Workload Identity
+# -----------------------------------------------------------------------------
+serviceAccount:
+  annotations:
+    iam.gke.io/gcp-service-account: ""  # TODO: Set from terraform output
+
+# -----------------------------------------------------------------------------
+# Autoscaling
+# -----------------------------------------------------------------------------
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+# -----------------------------------------------------------------------------
+# Pod Disruption Budget
+# -----------------------------------------------------------------------------
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2  # At least 2 pods always available in production
+
+# -----------------------------------------------------------------------------
+# Update Strategy
+# -----------------------------------------------------------------------------
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 1

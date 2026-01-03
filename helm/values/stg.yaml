@@ -1,0 +1,69 @@
+# =============================================================================
+# LiveKit Helm Chart - Staging Environment Values
+# =============================================================================
+# Inherits from common.yaml
+# Usage: helm install livekit livekit/livekit-server -f common.yaml -f stg.yaml
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Replica Configuration
+# -----------------------------------------------------------------------------
+replicaCount: 2
+
+# -----------------------------------------------------------------------------
+# Resource Limits (c2-standard-8: 8 vCPU, 32GB RAM)
+# -----------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: "4000m"
+    memory: "2048Mi"
+  limits:
+    cpu: "7500m"
+    memory: "4096Mi"
+
+# -----------------------------------------------------------------------------
+# LiveKit Configuration
+# -----------------------------------------------------------------------------
+livekit:
+  log_level: info
+
+  # TURN Configuration
+  turn:
+    enabled: true
+    domain: turn-stg.example.com  # TODO: Update with actual domain
+    secretName: livekit-turn-tls-stg
+
+  # Redis (from Terraform output)
+  redis:
+    address: ""  # TODO: Set from terraform output: redis_address
+
+# -----------------------------------------------------------------------------
+# Load Balancer Configuration
+# -----------------------------------------------------------------------------
+loadBalancer:
+  type: gke-managed-cert
+  staticIpName: livekit-ip-stg
+  certificateName: livekit-cert-stg
+
+# -----------------------------------------------------------------------------
+# Service Account with Workload Identity
+# -----------------------------------------------------------------------------
+serviceAccount:
+  annotations:
+    iam.gke.io/gcp-service-account: ""  # TODO: Set from terraform output
+
+# -----------------------------------------------------------------------------
+# Autoscaling
+# -----------------------------------------------------------------------------
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+# -----------------------------------------------------------------------------
+# Pod Disruption Budget
+# -----------------------------------------------------------------------------
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

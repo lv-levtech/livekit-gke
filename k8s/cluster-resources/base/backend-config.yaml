@@ -1,0 +1,13 @@
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: livekit-backend-config
+  namespace: livekit
+spec:
+  timeoutSec: 36000  # 10 hours for WebSocket connections
+  connectionDraining:
+    drainingTimeoutSec: 300
+  healthCheck:
+    type: HTTP
+    port: 7880
+    requestPath: /

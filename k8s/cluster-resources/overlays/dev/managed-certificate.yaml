@@ -1,0 +1,8 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: livekit-cert-dev
+  namespace: livekit
+spec:
+  domains:
+    - livekit.dev.levtech.org

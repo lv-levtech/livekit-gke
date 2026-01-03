@@ -1,0 +1,92 @@
+# =============================================================================
+# LiveKit Helm Chart - Development Environment Values
+# =============================================================================
+# Inherits from common.yaml
+# Usage: helm install livekit livekit/livekit-server -f common.yaml -f dev.yaml
+#
+# Dynamic values from Terraform should be passed via --set flags:
+#   --set livekit.redis.address=<redis_address>
+#   --set livekit.redis.password=<redis_password>
+#   --set serviceAccount.annotations."iam\.gke\.io/gcp-service-account"=<sa_email>
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Replica Configuration
+# -----------------------------------------------------------------------------
+replicaCount: 1
+
+# -----------------------------------------------------------------------------
+# Resource Limits (c2-standard-4: 4 vCPU, 16GB RAM)
+# -----------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: "1000m"
+    memory: "512Mi"
+  limits:
+    cpu: "2000m"
+    memory: "1024Mi"
+
+# -----------------------------------------------------------------------------
+# LiveKit Configuration
+# -----------------------------------------------------------------------------
+livekit:
+  log_level: debug
+
+  # TURN Configuration
+  turn:
+    enabled: true
+    domain: turn.dev.levtech.org
+    tls_port: 3478
+    udp_port: 3478
+    secretName: turn-tls-secret
+
+  # Redis (set via --set from Terraform output)
+  # redis:
+  #   address: ""  # --set livekit.redis.address=<value>
+  #   password: "" # --set livekit.redis.password=<value>
+
+  # API Keys stored in Kubernetes Secret
+  key_file: keys.yaml
+
+# -----------------------------------------------------------------------------
+# API Keys Secret
+# -----------------------------------------------------------------------------
+storeKeysInSecret:
+  enabled: true
+  existingSecret: "livekit-server-keys"
+
+# -----------------------------------------------------------------------------
+# Load Balancer Configuration
+# Using manually created Ingress for main domain
+# TURN uses LoadBalancer service for TLS termination
+# -----------------------------------------------------------------------------
+loadBalancer:
+  type: disable
+
+# -----------------------------------------------------------------------------
+# Node Selector
+# -----------------------------------------------------------------------------
+nodeSelector:
+  cloud.google.com/gke-nodepool: livekit-node-pool
+
+# -----------------------------------------------------------------------------
+# Service Account with Workload Identity
+# (annotation set via --set from Terraform output)
+# -----------------------------------------------------------------------------
+serviceAccount:
+  create: true
+  name: livekit-server
+  # annotations:
+  #   iam.gke.io/gcp-service-account: <set-via-terraform>
+
+# -----------------------------------------------------------------------------
+# Autoscaling (Disabled for dev)
+# -----------------------------------------------------------------------------
+autoscaling:
+  enabled: false
+
+# -----------------------------------------------------------------------------
+# Pod Disruption Budget (Disabled for single replica)
+# -----------------------------------------------------------------------------
+podDisruptionBudget:
+  enabled: false

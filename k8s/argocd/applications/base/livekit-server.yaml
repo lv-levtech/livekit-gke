@@ -1,0 +1,79 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: livekit-server
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: applications
+  source:
+    repoURL: https://helm.livekit.io
+    chart: livekit-server
+    targetRevision: "*"
+    helm:
+      releaseName: livekit
+      # Values are merged from multiple sources
+      # Base values from k8s/livekit-server/base/values.yaml
+      # Environment values from k8s/livekit-server/overlays/{env}/values.yaml
+      valueFiles: []
+      values: |
+        # Common values - override per environment
+        terminationGracePeriodSeconds: 18000
+        livekit:
+          log_level: info
+          port: 7880
+          rtc:
+            port_range_start: 50000
+            port_range_end: 60000
+            tcp_port: 7881
+            use_external_ip: true
+          turn:
+            enabled: true
+            udp_port: 3478
+            tls_port: 5349
+        hostNetwork: true
+        dnsPolicy: ClusterFirstWithHostNet
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          fsGroup: 1000
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+        prometheus:
+          enabled: true
+          port: 6789
+        serviceAccount:
+          create: true
+          name: livekit-server
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/name
+                      operator: In
+                      values:
+                        - livekit-server
+                topologyKey: kubernetes.io/hostname
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: livekit
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
