@@ -41,7 +41,26 @@ output "main_dns_record_fqdn" {
   value       = aws_route53_record.main.fqdn
 }
 
+output "turn_ns_record_fqdn" {
+  description = "FQDN of the TURN NS delegation record"
+  value       = aws_route53_record.turn_ns.fqdn
+}
+
+################################################################################
+# Cloud DNS Outputs
+################################################################################
+
+output "cloud_dns_zone_name" {
+  description = "Cloud DNS zone name for TURN subdomain"
+  value       = google_dns_managed_zone.turn.name
+}
+
+output "cloud_dns_name_servers" {
+  description = "Cloud DNS name servers for TURN subdomain"
+  value       = google_dns_managed_zone.turn.name_servers
+}
+
 output "turn_dns_record_fqdn" {
-  description = "FQDN of the TURN domain DNS record"
-  value       = aws_route53_record.turn.fqdn
+  description = "FQDN of the TURN domain A record in Cloud DNS"
+  value       = trimsuffix(google_dns_record_set.turn_a.name, ".")
 }

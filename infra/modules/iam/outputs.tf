@@ -22,3 +22,13 @@ output "workload_identity_annotation" {
   description = "Annotation to add to Kubernetes service account for Workload Identity"
   value       = "iam.gke.io/gcp-service-account=${google_service_account.livekit.email}"
 }
+
+output "certmanager_service_account_email" {
+  description = "Email of the cert-manager service account"
+  value       = google_service_account.certmanager.email
+}
+
+output "certmanager_workload_identity_annotation" {
+  description = "Annotation to add to cert-manager service account for Workload Identity"
+  value       = "iam.gke.io/gcp-service-account=${google_service_account.certmanager.email}"
+}

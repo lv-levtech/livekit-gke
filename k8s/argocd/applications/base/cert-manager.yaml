@@ -21,6 +21,10 @@ spec:
           global:
             leaderElection:
               namespace: cert-manager
+          # Workload Identity for Cloud DNS access (DNS-01 challenge)
+          serviceAccount:
+            annotations:
+              iam.gke.io/gcp-service-account: certmanager-dev@lt-ai-roleplay-dev.iam.gserviceaccount.com
           prometheus:
             enabled: true
           resources:

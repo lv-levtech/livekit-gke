@@ -109,3 +109,32 @@ resource "google_project_iam_member" "cicd_secret_admin" {
   role    = "roles/secretmanager.admin"
   member  = "serviceAccount:${google_service_account.cicd.email}"
 }
+
+################################################################################
+# cert-manager Service Account
+# For DNS-01 ACME challenge with Cloud DNS (Workload Identity)
+################################################################################
+
+resource "google_service_account" "certmanager" {
+  account_id   = "certmanager-${var.environment}"
+  project      = var.project_id
+  display_name = "cert-manager Service Account (${var.environment})"
+  description  = "Service account for cert-manager DNS-01 challenge in ${var.environment} environment"
+}
+
+# Workload Identity binding for cert-manager
+resource "google_service_account_iam_binding" "certmanager_workload_identity" {
+  service_account_id = google_service_account.certmanager.name
+  role               = "roles/iam.workloadIdentityUser"
+
+  members = [
+    "serviceAccount:${var.project_id}.svc.id.goog[cert-manager/cert-manager]"
+  ]
+}
+
+# DNS Admin for cert-manager (required for DNS-01 challenge)
+resource "google_project_iam_member" "certmanager_dns_admin" {
+  project = var.project_id
+  role    = "roles/dns.admin"
+  member  = "serviceAccount:${google_service_account.certmanager.email}"
+}

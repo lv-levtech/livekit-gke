@@ -5,10 +5,21 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: admin@example.com  # Override in environment overlays
+    email: admin@levtech.org
     privateKeySecretRef:
       name: letsencrypt-prod-account-key
     solvers:
+      # DNS-01 solver for TURN domain - GCP Cloud DNS with Workload Identity
+      - selector:
+          dnsNames:
+            - "turn.dev.levtech.org"
+            - "turn.stg.levtech.org"
+            - "turn.levtech.org"
+        dns01:
+          cloudDNS:
+            project: lt-ai-roleplay-dev
+            # Uses Workload Identity - no additional credentials needed
+      # HTTP-01 solver for other domains
       - http01:
           ingress:
             class: gce

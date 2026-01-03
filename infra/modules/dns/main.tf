@@ -79,12 +79,13 @@ resource "aws_route53_record" "main" {
   records = [google_compute_global_address.livekit_ip.address]
 }
 
-# A Record for TURN Domain (turn.*.levtech.org)
-resource "aws_route53_record" "turn" {
+# NS Delegation for TURN Domain (turn.*.levtech.org)
+# Delegates to GCP Cloud DNS for cert-manager DNS-01 challenge
+resource "aws_route53_record" "turn_ns" {
   zone_id = var.route53_zone_id
   name    = var.turn_domain
-  type    = "A"
+  type    = "NS"
   ttl     = var.dns_ttl
 
-  records = [google_compute_address.turn_ip.address]
+  records = google_dns_managed_zone.turn.name_servers
 }
