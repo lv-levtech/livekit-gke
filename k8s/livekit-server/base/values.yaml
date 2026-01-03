@@ -110,13 +110,13 @@ dnsPolicy: ClusterFirstWithHostNet
 # Security Context
 # -----------------------------------------------------------------------------
 securityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  fsGroup: 1000
+  runAsNonRoot: false  # Required for reading mounted secrets
+  # runAsUser: 1000
+  # fsGroup: 1000
 
 containerSecurityContext:
   allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
+  readOnlyRootFilesystem: false  # Required for keys.yaml access
   capabilities:
     drop:
       - ALL
