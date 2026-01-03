@@ -14,74 +14,33 @@ patches:
         path: /spec/source/path
         value: k8s/cluster-resources/overlays/dev
 
-  # Update livekit-server for dev environment
+  # Update cert-manager-resources path for dev environment
+  - target:
+      kind: Application
+      name: cert-manager-resources
+    patch: |-
+      - op: replace
+        path: /spec/source/path
+        value: k8s/cert-manager/overlays/dev
+
+  # Update external-secrets-resources path for dev environment
+  - target:
+      kind: Application
+      name: external-secrets-resources
+    patch: |-
+      - op: replace
+        path: /spec/source/path
+        value: k8s/external-secrets/overlays/dev
+
+  # livekit-server uses multi-source with valueFiles
+  # Values are read from k8s/livekit-server/overlays/dev/values.yaml
+  # No patch needed - just update the sources in base
   - target:
       kind: Application
       name: livekit-server
     patch: |-
       - op: replace
-        path: /spec/source/helm/values
-        value: |
-          replicaCount: 1
-          terminationGracePeriodSeconds: 18000
-          livekit:
-            log_level: debug
-            port: 7880
-            rtc:
-              port_range_start: 50000
-              port_range_end: 60000
-              tcp_port: 7881
-              use_external_ip: true
-            turn:
-              enabled: true
-              domain: turn.dev.levtech.org
-              udp_port: 3478
-              tls_port: 5349
-              secretName: turn-tls-secret
-            key_file: keys.yaml
-          storeKeysInSecret:
-            enabled: true
-            existingSecret: livekit-server-keys
-          loadBalancer:
-            type: disable
-          hostNetwork: true
-          dnsPolicy: ClusterFirstWithHostNet
-          nodeSelector:
-            cloud.google.com/gke-nodepool: livekit-node-pool
-          resources:
-            requests:
-              cpu: "1000m"
-              memory: "512Mi"
-            limits:
-              cpu: "2000m"
-              memory: "1024Mi"
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
-            fsGroup: 1000
-          containerSecurityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop:
-                - ALL
-          prometheus:
-            enabled: true
-            port: 6789
-          serviceAccount:
-            create: true
-            name: livekit-server
-          autoscaling:
-            enabled: false
-          podDisruptionBudget:
-            enabled: false
-          affinity:
-            podAntiAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-                - labelSelector:
-                    matchExpressions:
-                      - key: app.kubernetes.io/name
-                        operator: In
-                        values:
-                          - livekit-server
-                  topologyKey: kubernetes.io/hostname
+        path: /spec/sources/1/helm/valueFiles
+        value:
+          - $values/k8s/livekit-server/base/values.yaml
+          - $values/k8s/livekit-server/overlays/dev/values.yaml
